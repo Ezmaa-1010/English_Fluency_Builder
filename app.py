@@ -1,3 +1,4 @@
+# English Fluency Builder — corrected version
 import os
 import random
 import streamlit as st
@@ -93,4 +94,3 @@ with st.sidebar:
     st.markdown("- 🧩 Build a sentence")
     st.markdown("- 🧠 Revise vocabulary")
     st.divider()
-    if get_api_key():
