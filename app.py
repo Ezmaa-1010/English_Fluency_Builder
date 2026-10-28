@@ -1,4 +1,3 @@
-# English Fluency Builder — corrected version
 import os
 import random
 import streamlit as st
@@ -8,89 +7,90 @@ try:
 except ImportError:
     Groq = None
 
-st.set_page_config(
-    page_title="English Fluency Builder",
-    page_icon="📘",
-    layout="wide",
-)
+st.set_page_config(page_title="English Fluency Builder", page_icon="📘", layout="wide")
 
-VOCABULARY = [
-    {"word": "Curious", "meaning": "Eager to learn or know about something.", "example": "She was curious about how the machine worked.", "options": ["Eager to learn", "Very tired", "Angry with someone"], "answer": "Eager to learn"},
-    {"word": "Reliable", "meaning": "Able to be trusted or depended on.", "example": "He is a reliable friend who always keeps his promises.", "options": ["Difficult to understand", "Able to be trusted", "Quick to forget"], "answer": "Able to be trusted"},
-    {"word": "Improve", "meaning": "To make or become better.", "example": "Reading every day can improve your vocabulary.", "options": ["Make better", "Make smaller", "Hide something"], "answer": "Make better"},
-    {"word": "Confident", "meaning": "Feeling sure about your abilities or yourself.", "example": "Practice helped her feel confident when speaking English.", "options": ["Feeling sure of yourself", "Feeling confused", "Feeling sleepy"], "answer": "Feeling sure of yourself"},
-    {"word": "Brief", "meaning": "Short in time or length.", "example": "We had a brief meeting before class.", "options": ["Very noisy", "Short in time or length", "Extremely expensive"], "answer": "Short in time or length"},
-    {"word": "Consider", "meaning": "To think carefully about something.", "example": "Please consider all the options before deciding.", "options": ["Think carefully about", "Forget completely", "Speak loudly"], "answer": "Think carefully about"},
-    {"word": "Essential", "meaning": "Completely necessary or very important.", "example": "Regular practice is essential for progress.", "options": ["Unusual", "Not needed", "Necessary or very important"], "answer": "Necessary or very important"},
-    {"word": "Achieve", "meaning": "To succeed in doing or reaching something.", "example": "She worked hard to achieve her goal.", "options": ["Reach successfully", "Give away", "Delay until later"], "answer": "Reach successfully"},
-    {"word": "Polite", "meaning": "Showing respect and good manners.", "example": "It is polite to listen when another person is speaking.", "options": ["Showing good manners", "Very impatient", "Hard to find"], "answer": "Showing good manners"},
-    {"word": "Expand", "meaning": "To become larger or make something larger.", "example": "Try to expand your vocabulary by learning five words a day.", "options": ["Make smaller", "Make larger", "Repeat exactly"], "answer": "Make larger"},
+# ---------- Design ----------
+st.markdown("""
+<style>
+.block-container {padding-top: 2rem; padding-bottom: 3rem; max-width: 1150px;}
+.hero {padding: 1.6rem 1.8rem; border-radius: 18px; background: linear-gradient(120deg,#183b56,#287271); color: white; margin-bottom: 1.2rem;}
+.hero h1 {color: white; margin: 0 0 .35rem 0; font-size: 2.2rem;}
+.hero p {color: #e8f5f2; margin: 0; font-size: 1.05rem;}
+.metric-card {padding: 1rem; border: 1px solid rgba(128,128,128,.25); border-radius: 14px; min-height: 100px;}
+.word-card {padding: 1.2rem; border-radius: 16px; border: 1px solid rgba(128,128,128,.25); margin: .5rem 0 1rem 0;}
+.small-muted {opacity: .75; font-size: .9rem;}
+div.stButton > button {border-radius: 10px; min-height: 2.7rem;}
+</style>
+""", unsafe_allow_html=True)
+
+WORDS = [
+    {"word":"Curious","meaning":"Eager to learn or know about something.","example":"I am curious about how languages work.","options":["Eager to learn","Very tired","Angry"],"answer":"Eager to learn"},
+    {"word":"Reliable","meaning":"Able to be trusted or depended on.","example":"A reliable teammate keeps their promises.","options":["Easy to break","Able to be trusted","Always late"],"answer":"Able to be trusted"},
+    {"word":"Improve","meaning":"To make or become better.","example":"Ten minutes of practice can improve your English.","options":["Make better","Hide something","Make noisier"],"answer":"Make better"},
+    {"word":"Confident","meaning":"Feeling sure about yourself or your abilities.","example":"She felt confident while speaking in class.","options":["Sure of yourself","Sleepy","Confused"],"answer":"Sure of yourself"},
+    {"word":"Brief","meaning":"Short in time or length.","example":"We had a brief conversation after class.","options":["Very long","Short in time or length","Very expensive"],"answer":"Short in time or length"},
+    {"word":"Consider","meaning":"To think carefully about something.","example":"Consider each answer before choosing.","options":["Think carefully about","Forget completely","Copy quickly"],"answer":"Think carefully about"},
+    {"word":"Essential","meaning":"Very important or necessary.","example":"Practice is essential for progress.","options":["Unnecessary","Necessary or very important","Unusual"],"answer":"Necessary or very important"},
+    {"word":"Achieve","meaning":"To succeed in reaching a goal.","example":"She worked hard to achieve her goal.","options":["Reach successfully","Give away","Put off"],"answer":"Reach successfully"},
+    {"word":"Polite","meaning":"Showing respect and good manners.","example":"It is polite to listen without interrupting.","options":["Rude","Showing good manners","Impatient"],"answer":"Showing good manners"},
+    {"word":"Expand","meaning":"To make or become larger.","example":"Reading helps expand your vocabulary.","options":["Make smaller","Make larger","Repeat"],"answer":"Make larger"},
+    {"word":"Hesitate","meaning":"To pause before doing or saying something because you are unsure.","example":"Do not hesitate to ask questions.","options":["Pause because you are unsure","Celebrate loudly","Finish quickly"],"answer":"Pause because you are unsure"},
+    {"word":"Accurate","meaning":"Correct and without mistakes.","example":"Please provide accurate information.","options":["Correct and without mistakes","Hard to read","Very fast"],"answer":"Correct and without mistakes"},
+]
+GRAMMAR = [
+    {"q":"She ___ to school every day.","options":["go","goes","going"],"answer":"goes","why":"With he, she, or it in the simple present, most verbs take -s or -es: she goes."},
+    {"q":"I have lived here ___ 2020.","options":["for","since","during"],"answer":"since","why":"Use since with a starting point (since 2020). Use for with a duration (for three years)."},
+    {"q":"They ___ watching a film right now.","options":["is","are","was"],"answer":"are","why":"Use are with they in the present continuous: they are watching."},
+    {"q":"If I ___ more time, I would learn French.","options":["have","had","will have"],"answer":"had","why":"The second conditional uses if + past simple, then would + base verb."},
+    {"q":"This is the ___ book I have ever read.","options":["more interesting","most interesting","interesting"],"answer":"most interesting","why":"Use the superlative when comparing one item with the whole group: the most interesting."},
+    {"q":"He is good ___ mathematics.","options":["at","in","on"],"answer":"at","why":"The usual expression is good at something: good at mathematics."},
+    {"q":"We ___ dinner when the phone rang.","options":["had","were having","are having"],"answer":"were having","why":"Use past continuous for an action in progress when another past event happened."},
 ]
 
-GRAMMAR_QUESTIONS = [
-    {"question": "She ___ to school every day.", "options": ["go", "goes", "going"], "answer": "goes", "explanation": "Use 'goes' with he, she, or it in the simple present tense."},
-    {"question": "I have lived here ___ 2020.", "options": ["for", "since", "from"], "answer": "since", "explanation": "Use 'since' with a starting point in time, such as 2020. Use 'for' with a duration, such as three years."},
-    {"question": "They ___ watching a movie right now.", "options": ["is", "are", "was"], "answer": "are", "explanation": "Use 'are' with the plural subject 'they' in the present continuous tense."},
-    {"question": "If I ___ more time, I would learn another language.", "options": ["have", "had", "will have"], "answer": "had", "explanation": "In this second conditional pattern, use 'if + past simple' followed by 'would + base verb'."},
-    {"question": "This is the ___ book I have ever read.", "options": ["more interesting", "most interesting", "interesting"], "answer": "most interesting", "explanation": "Use the superlative 'most interesting' when comparing one thing with all others in a group."},
-]
-
-def get_api_key():
+def api_key():
     try:
-        key = st.secrets.get("GROQ_API_KEY", "")
-        if key:
-            return key
+        value = st.secrets.get("GROQ_API_KEY", "")
+        if value:
+            return value
     except Exception:
         pass
     return os.getenv("GROQ_API_KEY", "")
 
-def ask_groq(system_prompt, user_prompt):
-    api_key = get_api_key()
-    if not api_key:
-        return None, "Add your Groq API key in Streamlit Secrets or as the GROQ_API_KEY environment variable."
+def ai_reply(system, prompt):
+    key = api_key()
+    if not key:
+        return None, "Groq API key is missing. Add GROQ_API_KEY in Streamlit → Manage app → Settings → Secrets."
     if Groq is None:
-        return None, "The Groq package is not installed. Add groq to requirements.txt and redeploy."
+        return None, "Groq package is not installed. Check that requirements.txt contains groq, then reboot the app."
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(api_key=key)
         response = client.chat.completions.create(
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.3,
-            max_tokens=900,
+            messages=[{"role":"system","content":system},{"role":"user","content":prompt}],
+            temperature=0.25,
+            max_tokens=1000,
         )
         return response.choices[0].message.content.strip(), None
     except Exception as exc:
-        return None, f"Groq request failed: {exc}"
+        return None, f"Groq could not answer: {exc}"
 
-def init_state():
-    defaults = {
-        "vocab_index": 0,
-        "vocab_order": list(range(len(VOCABULARY))),
-        "vocab_answered": {},
-        "grammar_index": 0,
-        "grammar_answers": {},
-        "sentence_words": ["because", "practice", "I", "every day", "improve", "my English"],
-        "sentence_feedback": "",
-        "daily_seed": None,
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
+def set_default(key, value):
+    if key not in st.session_state:
+        st.session_state[key] = value
 
-init_state()
+set_default("word_index", 0)
+set_default("word_order", list(range(len(WORDS))))
+set_default("word_results", {})
+set_default("grammar_index", 0)
+set_default("grammar_results", {})
+set_default("revision_word", random.randrange(len(WORDS)))
+set_default("sentence_order", ["because", "I", "practise", "English", "every day"])
+set_default("writing_feedback", None)
 
-st.title("📘 English Fluency Builder")
-st.write("Build your English skills with short vocabulary, grammar, and writing activities.")
-st.caption("You can use the practice activities without an API key. Groq AI is used for personalized grammar correction and writing feedback.")
-
-with st.sidebar:
-    st.header("Your practice plan")
-    st.write("Try a short activity each day.")
-    st.markdown("- 📚 Learn a new word")
-    st.markdown("- ✍️ Correct a sentence")
-    st.markdown("- 🧩 Build a sentence")
-    st.markdown("- 🧠 Revise vocabulary")
-    st.divider()
+# ---------- Header ----------
+st.markdown("""
+<div class="hero">
+  <h1>📘 English Fluency Builder</h1>
+  <p>Small daily practice. Stronger English. More confidence.</p>
+</div>
+""", unsafe_allow_html=True)
